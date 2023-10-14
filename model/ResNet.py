@@ -1,5 +1,5 @@
 import math
-
+import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
@@ -12,7 +12,13 @@ def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
 def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
-
+# 定义新的conv1层
+sar_conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3, bias=True)
+opt_conv1 = nn.Conv2d(in_channels=4, out_channels=64, kernel_size=7, stride=2, padding=3, bias=True)
+# 使用高斯分布对新的conv1层的权重进行初始化
+mean, std = 0, 0.01
+sar_conv1.weight.data.normal_(mean, std)
+opt_conv1.weight.data.normal_(mean, std)
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -105,13 +111,15 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)  # change
+        # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)  # change
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-        self.avgpool = nn.AvgPool2d(7)
+        # self.avgpool = nn.AvgPool2d(7)
+        self.avgpool = nn.AvgPool2d(7, stride=1)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -153,12 +161,26 @@ class ResNet(nn.Module):
         return [feat1, feat2, feat3, feat4, feat5]
 
 
-def resnet101(pretrained=False, **kwargs):
-    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
+def resnet101(pretrained=False, type=None, **kwargs):
+    model = ResNet(Bottleneck, layers=[3, 4, 23, 3], **kwargs)
+    # print(model)
     if pretrained:
+        # model.load_state_dict(
+        #     model_zoo.load_url('https://github.com/LikeLy-Journey/SegmenTron/releases/download/v0.1.0/resnet101-2a57e44d.pth', model_dir='model_data'),
+        #     strict=False)
         model.load_state_dict(
-            model_zoo.load_url('https://download.pytorch.org/models/resnet101-5d3b4d8f.pth', model_dir='model_data'),
+            model_zoo.load_url(
+                'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
+                model_dir='model_data'),
             strict=False)
+        # model.load_state_dict(
+        #     model_zoo.load_url(torch.load('model_data/resnet101-2a57e44d.pth')),
+        #     strict=False)
+    # Gaussian distribution is implemented to initialize the new conv1 layer
+    if type == 'sar':
+        model.conv1 = sar_conv1
+    else:
+        model.conv1 = opt_conv1
 
     del model.avgpool
     del model.fc
