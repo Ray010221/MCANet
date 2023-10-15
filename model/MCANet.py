@@ -11,7 +11,7 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 class MACANet(nn.Module):
-    def __init__(self, num_class = 7, pretrained = True, backbone = 'ResNet101'):
+    def __init__(self, num_class = 8, pretrained = True, backbone = 'ResNet101'):
         super(MACANet, self).__init__()
         self.encoder = EncoderBlock(pretrained, backbone)
         self.decoder = DecoderBlock(num_class)

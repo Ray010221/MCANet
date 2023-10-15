@@ -5,10 +5,10 @@ from tqdm import tqdm
 from shutil import copy
 #### only split train and test
 
-input_data_path = r'D:\High-Resolution-Remote-Sensing-Semantic-Segmentation-PyTorch-master\whu-opt-sar'
-input_sar_path = glob.glob(os.path.join(os.path.join(input_data_path, 'sar'), '*.tif'))
-input_opt_path = glob.glob(os.path.join(os.path.join(input_data_path, 'optical'), '*.tif'))
-input_lbl_path = glob.glob(os.path.join(os.path.join(input_data_path, 'lbl'), '*.tif'))
+input_data_path = 'dataset'
+input_sar_path = glob.glob(os.path.join(os.path.join(input_data_path, 'sars'), '*.tif'))
+input_opt_path = glob.glob(os.path.join(os.path.join(input_data_path, 'opticals'), '*.tif'))
+input_lbl_path = glob.glob(os.path.join(os.path.join(input_data_path, 'lbls'), '*.tif'))
 
 print(input_sar_path, input_opt_path, input_lbl_path)
 print('共有{}对影像'.format(len(input_opt_path)))

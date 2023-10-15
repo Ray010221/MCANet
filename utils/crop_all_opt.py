@@ -46,11 +46,11 @@ class OptImage_to_patch:
 if __name__ == '__main__':
     image_size = 256
 
-    sar_path = r'E:\Segmentation\whu-opt-sar\sar'
-    crop_sar_image_path = r'E:\High-Resolution-Remote-Sensing-Semantic-Segmentation-PyTorch-master\whu-opt-sar\sar'
+    sar_path = 'dataset/sar'
+    crop_sar_image_path = r'dataset/sars'
 
-    optical_path = r'E:\Segmentation\whu-opt-sar\optical'
-    crop_optical_image_path = r'E:\High-Resolution-Remote-Sensing-Semantic-Segmentation-PyTorch-master\whu-opt-sar\optical'
+    optical_path = 'dataset/optical'
+    crop_optical_image_path = 'dataset/opticals'
 
     # image to patch
     task = OptImage_to_patch(image_size, sar_path, crop_sar_image_path, optical_path, crop_optical_image_path) # top 10 images

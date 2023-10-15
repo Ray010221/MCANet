@@ -38,8 +38,8 @@ class LblImage_to_patch:
 if __name__ == '__main__':
     image_size = 256
 
-    lbl_path = r'E:\Segmentation\whu-opt-sar\orignlbl'
-    crop_lbl_image_path = r'E:\High-Resolution-Remote-Sensing-Semantic-Segmentation-PyTorch-master\whu-opt-sar\lbl'
+    lbl_path = 'dataset/orignlbl'
+    crop_lbl_image_path = 'dataset/lbls'
 
     # image to patch
     task = LblImage_to_patch(image_size, lbl_path, crop_lbl_image_path) # top 10 labels
