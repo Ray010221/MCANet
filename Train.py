@@ -24,11 +24,12 @@ torch.cuda.manual_seed_all(seed)
 # 以类的方式定义参数，还有很多方法，config文件等等
 class Args:
     def __init__(self) -> None:
-        self.batch_size = 4
+        self.batch_size = 16
         self.lr = 0.001
-        self.epochs = 20
-        # self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.device = torch.device("cuda:3")
+        self.epochs = 50
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.momentom = 0.5
+        # self.device = torch.device("cuda:0")
 
 
 
@@ -48,12 +49,14 @@ def train():
     model = MACANet().to(args.device)
     # print(model)
     criterion = nn.CrossEntropyLoss(size_average=True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentom)
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
     train_epochs_loss = []
     valid_epochs_loss = []
-    train_acc = []
-    val_acc = []
+    train_epochs_acc = []
+    valid_epochs_acc = []
 
     for epoch in range(args.epochs):
         model.train()
@@ -70,7 +73,7 @@ def train():
             # output_max, preds = torch.max(outputs, 1)
             # print(outputs.shape, label.shape)
             # print(output_max.shape, preds.shape)
-            # output_max = output_max.data.cpu().numpy().squeeze().astype(np.uint8)
+            # output_max = output_max.dataset.cpu().numpy().squeeze().astype(np.uint8)
 
             # label = label.long()
             # outputs = outputs.to(args.device)
@@ -88,7 +91,7 @@ def train():
             nums += label.size()[0] * label.size()[1] * label.size()[2]
             # print(label.size())
         train_epochs_loss.append(np.average(train_epoch_loss))
-        train_acc.append(100 * acc / nums)
+        train_epochs_acc.append(100 * acc / nums)
         print("train acc = {:.3f}%, loss = {}".format(100 * acc / nums, np.average(train_epoch_loss)))
         # =========================val=========================
         with torch.no_grad():
@@ -104,7 +107,7 @@ def train():
                 final_class = torch.argmax(outputs, dim=1)
                 final_class.to(args.device)
                 # output_max, preds = torch.max(outputs, 1)
-                # preds = preds.data.cpu().numpy().squeeze().astype(np.uint8)
+                # preds = preds.dataset.cpu().numpy().squeeze().astype(np.uint8)
                 label = label.long()
 
                 loss = criterion(outputs, label)
@@ -115,27 +118,53 @@ def train():
                 nums += label.size()[0] * label.size()[1] * label.size()[2]
                 # print(acc, nums)
 
+            # scheduler.step(np.average(val_epoch_loss))
             valid_epochs_loss.append(np.average(val_epoch_loss))
-            val_acc.append(100 * acc / nums)
+            valid_epochs_acc.append(100 * acc / nums)
 
-            print("epoch = {}, valid acc = {:.2f}%, loss = {}".format(epoch, 100 * acc / nums, np.average(val_epoch_loss)))
+            print("epoch = {}, valid acc = {:.2f}%, loss = {}".format(epoch + 1, 100 * acc / nums, np.average(val_epoch_loss)))
+
+    # =========================save model=====================
+    torch.save(model.state_dict(), 'weight/50-16-SGD-model.pth')
 
     # =========================plot==========================
-    plt.figure(figsize=(12, 4))
+    x = np.linspace(start=1, stop=args.epochs,  num=args.epochs, dtype = int)
+    # print(x)
+    plt.figure(figsize=(24, 8))
     plt.subplot(121)
-    plt.plot(train_epochs_loss[:])
-    plt.title("train_loss")
-    plt.subplot(122)
-    plt.plot(train_epochs_loss, '-o', label="train_loss")
-    plt.plot(valid_epochs_loss, '-o', label="valid_loss")
-    plt.title("epochs_loss")
+    # plt.plot(train_epoch_loss[:])
+    plt.title("Train Loss")
+    # 横坐标描述
+    plt.xlabel('Epochs')
+    # 纵坐标描述
+    plt.ylabel('Loss')
+    for a, b in zip(x, train_epochs_loss):
+        plt.text(a, b + 0.05, round(b, 2), ha='center', va='bottom', fontsize=8, color='blue')
+    for c, d in zip(x, valid_epochs_loss):
+        plt.text(c, d + 0.05, round(d, 2), ha='center', va='bottom', fontsize=8, color='orange')
+    plt.plot(x, train_epochs_loss,  '-o',  label="train_loss")
+    plt.plot(x, valid_epochs_loss, '-o',  label="valid_loss")
     plt.legend()
+    # plt.savefig('Train_Loss_50_16_SGD.png')
+    plt.subplot(122)
+    # 横坐标描述
+    plt.xlabel('Epochs')
+    # 纵坐标描述
+    plt.ylabel('OA')
+    for e, f in zip(x, train_epochs_acc):
+        plt.text(e, f + 0.05, round(f, 2), ha='center', va='bottom', fontsize=8)
+    for g, h in zip(x, valid_epochs_acc):
+        plt.text(g, h + 0.05, round(h, 2), ha='center', va='bottom', fontsize=8)
+    plt.plot(x, train_epochs_acc, '-o', label="train_OA")
+    plt.plot(x, valid_epochs_acc, '-o', label="valid_OA")
+    plt.title("Train Epochs")
+    plt.legend()
+    plt.savefig('Train_Loss_OA_50_16_SGD.png')
     plt.show()
-    # =========================save model=====================
-    torch.save(model.state_dict(), 'model.pth')
 
 
 
 if __name__ == '__main__':
     args = Args()
     train()
+

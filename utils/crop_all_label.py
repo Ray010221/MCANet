@@ -24,8 +24,8 @@ class LblImage_to_patch:
 
             # read lbl image
             img_lbl = cv2.imread(lbl_path, cv2.IMREAD_UNCHANGED)
-            h, w = img_lbl.shape
-
+            # h, w = img_lbl.shape
+            h, w, c =img_lbl.shape
             n_lbl = 1
             # SAR image
             for x in range(0, h - self.stride, self.stride):
@@ -38,8 +38,12 @@ class LblImage_to_patch:
 if __name__ == '__main__':
     image_size = 256
 
-    lbl_path = 'dataset/orignlbl'
-    crop_lbl_image_path = 'dataset/lbls'
+    # lbl_path = 'dataset/orignlbl'
+    # crop_lbl_image_path = 'dataset/lbls'
+    # lbl_path = '../dataset/orignlbl'
+    # crop_lbl_image_path = '../dataset/lbls'
+    lbl_path = '../dataset/lblRGB'
+    crop_lbl_image_path = '../dataset/lblRGBs'
 
     # image to patch
     task = LblImage_to_patch(image_size, lbl_path, crop_lbl_image_path) # top 10 labels

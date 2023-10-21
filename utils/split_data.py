@@ -5,7 +5,7 @@ from tqdm import tqdm
 from shutil import copy
 #### only split train and test
 
-input_data_path = 'dataset'
+input_data_path = '../dataset'
 input_sar_path = glob.glob(os.path.join(os.path.join(input_data_path, 'sars'), '*.tif'))
 input_opt_path = glob.glob(os.path.join(os.path.join(input_data_path, 'opticals'), '*.tif'))
 input_lbl_path = glob.glob(os.path.join(os.path.join(input_data_path, 'lbls'), '*.tif'))

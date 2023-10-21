@@ -7,13 +7,13 @@ Image.MAX_IMAGE_PIXELS = None
 
 def old_label2new_label(lbl, root_path, name):
     lbl[np.where(lbl == 0)] = 0
-    lbl[np.where(lbl == 10)] = 1
-    lbl[np.where(lbl == 20)] = 2
-    lbl[np.where(lbl == 30)] = 3
-    lbl[np.where(lbl == 40)] = 4
-    lbl[np.where(lbl == 50)] = 5
-    lbl[np.where(lbl == 60)] = 6
-    lbl[np.where(lbl == 70)] = 7
+    lbl[np.where(lbl == 10)] = 1 # farmland  (10,10,10)
+    lbl[np.where(lbl == 20)] = 2 # city  (20,20,20)
+    lbl[np.where(lbl == 30)] = 3 # village  (30,30,30)
+    lbl[np.where(lbl == 40)] = 4 # water  (40,40,40)
+    lbl[np.where(lbl == 50)] = 5 # forest  (50,50,50)
+    lbl[np.where(lbl == 60)] = 6 # road  (60,60,60)
+    lbl[np.where(lbl == 70)] = 7 # others (70,70,70)
 
     path = os.path.join(root_path, name)
     print('=====> save', path)
@@ -24,8 +24,8 @@ def old_label2new_label(lbl, root_path, name):
 if __name__ == '__main__':
 
 
-    lbl_root = r'E:\Segmentation\whu-opt-sar\lbl'
-    new_lbl_root = r'E:\Segmentation\whu-opt-sar\orignlbl'
+    lbl_root = '../dataset/lbl'
+    new_lbl_root = '../dataset/orignlbl'
 
     if not os.path.exists(new_lbl_root):
         os.makedirs(new_lbl_root)

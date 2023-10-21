@@ -1,36 +1,42 @@
 import cv2
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
+from DataSet import WHU_OPT_SARDataset
 from model.MCANet import MACANet
 import torch
-from PIL import Image
 import numpy as np
-import torchvision.transforms as transforms
 class Args:
     def __init__(self) -> None:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.batch_size = 8
 
-transform = transforms.Compose([
-    transforms.ToTensor()   # 将图像转换为张量
-])
-def pred(img_sar_path, img_opt_path):
+def test():
+    test_dataset = WHU_OPT_SARDataset(class_name='whu-sar-opt',
+                                      root='dataset/test')
+    test_dataloader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, shuffle=True)
+
     model = MACANet(pretrained=False)
-    model.load_state_dict(torch.load('weight/50-16-SGD-model.pth', map_location=args.device))
+    model.load_state_dict(torch.load('weight/50-16-Adam-model.pth', map_location=args.device))
+    model = model.to(args.device)
     model.eval()
 
-    img_sar = Image.open(img_sar_path)
-    img_opt = Image.open(img_opt_path)
-    img_sar = transform(img_sar).unsqueeze(0)
-    img_opt = transform(img_opt).unsqueeze(0)
-    print(img_sar.shape, img_opt.shape)
-    res = model(img_sar, img_opt)
+    acc = 0
+    nums = 0
+    for idx, (sar, opt, label) in enumerate(tqdm(test_dataloader)):
+        sar = sar.to(args.device)  # .to(torch.float)
+        opt = opt.to(args.device)
+        label = label.to(args.device)
+        outputs = model(sar, opt)
+        final_class = torch.argmax(outputs, dim=1)
+        final_class.to(args.device)
+        label = label.long()
 
-    res = torch.argmax(res, dim=1)
-    # print(res.shape)
-    # pred = res.cpu().numpy().squeeze().astype(np.uint8)
-    # print(res)
-    color_label(res.numpy().squeeze())
+        acc += torch.sum(final_class == label).item()
+        nums += label.size()[0] * label.size()[1] * label.size()[2]
 
-    # print("predicted label is {}, {} {} 8".format(res, val.item(), ('>' if res == 1 else '<')))
+    print("test OA = {:.3f}%".format(100 * acc / nums))
+
 
 color_map = {
     0: [0, 0, 0],  # 类别0对应黑色 backgroud
@@ -42,6 +48,8 @@ color_map = {
     6: [255, 255, 0],  # 类别6对应靛蓝色  road
     7: [153, 102, 153]  # 类别7对应紫色  others
 }
+
+
 def color_label(label):
     print(label)
     # 将单通道掩码图像转换为RGB图像
@@ -58,8 +66,7 @@ def color_label(label):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+
 if __name__ == '__main__':
     args = Args()
-    img_sar_path = r'dataset\test\sar\NH49E001013_12.tif'
-    img_opt_path = r'dataset\test\opt\NH49E001013_12.tif'
-    pred(img_sar_path, img_opt_path)
+    test()

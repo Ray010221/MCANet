@@ -44,8 +44,8 @@ if __name__ == '__main__':
     # sar_path = r'E:\Segmentation\whu-opt-sar\sar'
     # crop_sar_image_path = r'E:\High-Resolution-Remote-Sensing-Semantic-Segmentation-PyTorch-master\whu-opt-sar\sar'
 
-    sar_path = 'dataset/sar'
-    crop_sar_image_path = 'dataset/sars'
+    sar_path = '../dataset/sar'
+    crop_sar_image_path = '../dataset/sars'
 
     # image to patch
     task = SARImage_to_patch(image_size, sar_path, crop_sar_image_path)

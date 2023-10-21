@@ -45,7 +45,7 @@ class WHU_OPT_SARDataset(Dataset):
         # print(self.sync_img_mask)
 
         if (len(self.sync_img_mask)) == 0:
-            print("Found 0 data, please check your dataset!")
+            print("Found 0 dataset, please check your dataset!")
 
     def __getitem__(self, index):
         img_sar_path, img_opt_path, mask_path = self.sync_img_mask[index]

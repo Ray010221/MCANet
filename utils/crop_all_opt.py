@@ -1,6 +1,3 @@
-# !/usr/bin/env python
-# coding=utf-8
-
 #### crop size 256 x 256, stride 256
 import os
 import cv2
@@ -46,11 +43,11 @@ class OptImage_to_patch:
 if __name__ == '__main__':
     image_size = 256
 
-    sar_path = 'dataset/sar'
-    crop_sar_image_path = r'dataset/sars'
+    sar_path = '../dataset/sar'
+    crop_sar_image_path = '../dataset/sars'
 
-    optical_path = 'dataset/optical'
-    crop_optical_image_path = 'dataset/opticals'
+    optical_path = '../dataset/optical'
+    crop_optical_image_path = '../dataset/opticals'
 
     # image to patch
     task = OptImage_to_patch(image_size, sar_path, crop_sar_image_path, optical_path, crop_optical_image_path) # top 10 images
