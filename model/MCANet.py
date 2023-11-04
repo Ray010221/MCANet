@@ -11,10 +11,12 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 class MACANet(nn.Module):
-    def __init__(self, num_class = 8, pretrained = True, backbone = 'ResNet101'):
+    def __init__(self, num_classes = 1000, pretrained = True, backbone = 'ResNet101', att_type=None):
         super(MACANet, self).__init__()
-        self.encoder = EncoderBlock(pretrained, backbone)
-        self.decoder = DecoderBlock(num_class)
+        # print(num_classes)
+        self.encoder = EncoderBlock(pretrained, backbone, att_type=att_type)
+        self.decoder = DecoderBlock(num_classes)
+
 
     def forward(self, sar_img, opt_img):
         opt_sar_low_high_features = self.encoder.forward(sar_img, opt_img)
@@ -22,11 +24,11 @@ class MACANet(nn.Module):
 
         return classification
 class EncoderBlock(nn.Module):
-    def __init__(self, pretrained = True, backbone = 'ResNet101'):
+    def __init__(self, pretrained = True, backbone = 'ResNet101', num_classes=1000, att_type=None):
         super(EncoderBlock, self).__init__()
         if backbone == 'ResNet101':
-            self.SAR_resnet = resnet101(pretrained, type='sar')
-            self.OPT_resnet = resnet101(pretrained, type='opt')
+            self.SAR_resnet = resnet101(pretrained, type='sar', num_classes=num_classes, att_type=att_type)
+            self.OPT_resnet = resnet101(pretrained, type='opt', num_classes=num_classes, att_type=att_type)
         else:
             raise ValueError('Unsupported backbone - `{}`, Use ResNet101.'.format(backbone))
 

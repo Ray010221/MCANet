@@ -26,9 +26,11 @@ class Args:
     def __init__(self) -> None:
         self.batch_size = 16
         self.lr = 0.001
-        self.epochs = 50
+        self.epochs = 80
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.momentom = 0.5
+        self.num_classes = 8
+        self.att_type = 'CBAM'
         # self.device = torch.device("cuda:0")
 
 
@@ -46,11 +48,11 @@ def train():
                                      root='dataset/val')
     val_dataloader = DataLoader(dataset=val_dataset, batch_size=args.batch_size, shuffle=True)
 
-    model = MACANet().to(args.device)
+    model = MACANet(num_classes=args.num_classes, att_type=args.att_type).to(args.device)
     # print(model)
     criterion = nn.CrossEntropyLoss(size_average=True)
-    # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentom)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentom)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
     train_epochs_loss = []
@@ -125,7 +127,7 @@ def train():
             print("epoch = {}, valid acc = {:.2f}%, loss = {}".format(epoch + 1, 100 * acc / nums, np.average(val_epoch_loss)))
 
     # =========================save model=====================
-    torch.save(model.state_dict(), 'weight/50-16-SGD-model.pth')
+    torch.save(model.state_dict(), 'weight/100-16-AdamCBAM-model.pth')
 
     # =========================plot==========================
     x = np.linspace(start=1, stop=args.epochs,  num=args.epochs, dtype = int)
@@ -159,7 +161,7 @@ def train():
     plt.plot(x, valid_epochs_acc, '-o', label="valid_OA")
     plt.title("Train Epochs")
     plt.legend()
-    plt.savefig('Train_Loss_OA_50_16_SGD.png')
+    plt.savefig('Train_Loss_OA_100_16_Adam_CBAM.png')
     plt.show()
 
 

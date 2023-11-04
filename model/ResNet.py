@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
+from model.CBAM import CBAM
+
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -23,7 +25,7 @@ class BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None):
+                 base_width=64, dilation=1, norm_layer=None, use_cbam=False):
         super(BasicBlock, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -39,6 +41,11 @@ class BasicBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
+        if use_cbam:
+            self.cbam = CBAM(planes, 16)
+        else:
+            self.cbam = None
+
     def forward(self, x):
         identity = x
 
@@ -52,6 +59,9 @@ class BasicBlock(nn.Module):
         if self.downsample is not None:
             identity = self.downsample(x)
 
+        if not self.cbam is None:
+            out = self.cbam(out)
+
         out += identity
         out = self.relu(out)
 
@@ -62,7 +72,7 @@ class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None):
+                 base_width=64, dilation=1, norm_layer=None, use_cbam=False):
         super(Bottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -81,6 +91,11 @@ class Bottleneck(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
+        if use_cbam:
+            self.cbam = CBAM(planes * 4, 16)
+        else:
+            self.cbam = None
+
     def forward(self, x):
         identity = x
 
@@ -98,6 +113,9 @@ class Bottleneck(nn.Module):
         if self.downsample is not None:
             identity = self.downsample(x)
 
+        if not self.cbam is None:
+            out = self.cbam(out)
+
         out += identity
         out = self.relu(out)
 
@@ -105,7 +123,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes=1000):
+    def __init__(self, block, layers, num_classes=1000, att_type=None):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
@@ -113,10 +131,10 @@ class ResNet(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)  # change
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.layer1 = self._make_layer(block, 64, layers[0], att_type=att_type)
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, att_type=att_type)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2, att_type=att_type)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2, att_type=att_type)
 
         # self.avgpool = nn.AvgPool2d(7)
         self.avgpool = nn.AvgPool2d(7, stride=1)
@@ -130,7 +148,7 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layer(self, block, planes, blocks, stride=1):
+    def _make_layer(self, block, planes, blocks, stride=1, att_type=None):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -140,10 +158,10 @@ class ResNet(nn.Module):
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride, downsample, use_cbam=att_type=='CBAM'))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes))
+            layers.append(block(self.inplanes, planes, use_cbam=att_type=='CBAM'))
 
         return nn.Sequential(*layers)
 
@@ -161,8 +179,8 @@ class ResNet(nn.Module):
         return [feat1, feat2, feat3, feat4, feat5]
 
 
-def resnet101(pretrained=False, type=None, **kwargs):
-    model = ResNet(Bottleneck, layers=[3, 4, 23, 3], **kwargs)
+def resnet101(pretrained=False, type=None, num_classes=1000, att_type=None):
+    model = ResNet(Bottleneck, layers=[3, 4, 6, 3], num_classes=num_classes, att_type=att_type)
     # print(model)
     if pretrained:
         # model.load_state_dict(
