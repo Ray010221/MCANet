@@ -10,13 +10,15 @@ class Args:
     def __init__(self) -> None:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.batch_size = 8
+        self.num_classes = 8
+        self.att_type = 'CBAM'
 
 def test():
     test_dataset = WHU_OPT_SARDataset(class_name='whu-sar-opt',
                                       root='dataset/test')
     test_dataloader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, shuffle=True)
 
-    model = MACANet(pretrained=False)
+    model = MACANet(pretrained=False, num_classes=args.num_classes, att_type=args.att_type)
     model.load_state_dict(torch.load('weight/50-16-Adam-model.pth', map_location=args.device))
     model = model.to(args.device)
     model.eval()
