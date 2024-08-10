@@ -180,7 +180,7 @@ class ResNet(nn.Module):
 
 
 def resnet101(pretrained=False, type=None, num_classes=1000, att_type=None):
-    model = ResNet(Bottleneck, layers=[3, 4, 6, 3], num_classes=num_classes, att_type=att_type)
+    model = ResNet(Bottleneck, layers=[3, 4, 23, 3], num_classes=num_classes, att_type=att_type)
     # print(model)
     if pretrained:
         # model.load_state_dict(
